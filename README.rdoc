@@ -1,8 +1,6 @@
 = ocra
 
-* http://ocra.rubyforge.org
-* RubyForge project page: http://rubyforge.org/projects/ocra
-* GitHub: http://github.com/larsch/ocra
+* https://github.com/larsch/ocra/
 * Issue tracker: http://github.com/larsch/ocra/issues
 * Google Group: http://groups.google.com/group/ruby-ocra
 
@@ -16,7 +14,7 @@ any additionally needed ruby libraries or DLL.
 == FEATURES
 
 * LZMA Compression (optional, default on)
-* Ruby 1.8.7, 1.9.3 and 2.0.0 support
+* Ruby 1.8.7, 1.9.3, 2.0.0 and 2.1.5 support
 * Both windowed/console mode supported
 * Includes gems based on usage, or from a Bundler Gemfile
 
@@ -28,6 +26,20 @@ If you experience problems with OCRA or have found a bug, please use
 the issue tracker on GitHub (http://github.com/larsch/ocra/issues).
 You can also join the Google Group discussion forum to ask questions
 and get help (http://groups.google.com/group/ruby-ocra).
+
+== INSTALLATION:
+
+Gem:
+
+  gem install ocra
+
+Alternatively you can download the gem at either
+http://rubygems.org/gems/ocra or
+https://github.com/larsch/ocra/releases/.
+
+Stand-alone Version: Get ocrasa.rb from
+https://github.com/larsch/ocra/releases/. Requires nothing but a
+working Ruby installation on Windows.
 
 == SYNOPSIS:
 
@@ -49,59 +61,59 @@ dependencies (gems and DLLs) into an executable named
 
 Ocra options:
 
---help             Display this information.
---quiet            Suppress output while building executable.
---verbose          Show extra output while building executable.
---version          Display version number and exit.
+    --help             Display this information.
+    --quiet            Suppress output while building executable.
+    --verbose          Show extra output while building executable.
+    --version          Display version number and exit.
 
 Packaging options:
 
---dll dllname      Include additional DLLs from the Ruby bindir.
---add-all-core     Add all core ruby libraries to the executable.
---gemfile <file>   Add all gems and dependencies listed in a Bundler Gemfile.
---no-enc           Exclude encoding support files
+    --dll dllname      Include additional DLLs from the Ruby bindir.
+    --add-all-core     Add all core ruby libraries to the executable.
+    --gemfile <file>   Add all gems and dependencies listed in a Bundler Gemfile.
+    --no-enc           Exclude encoding support files
 
 Gem content detection modes:
 
---gem-minimal[=gem1,..]  Include only loaded scripts
---gem-guess=[gem1,...]   Include loaded scripts & best guess (DEFAULT)
---gem-all[=gem1,..]      Include all scripts & files
---gem-full[=gem1,..]     Include EVERYTHING
---gem-spec[=gem1,..]     Include files in gemspec (Does not work with Rubygems 1.7+)
+    --gem-minimal[=gem1,..]  Include only loaded scripts
+    --gem-guess=[gem1,...]   Include loaded scripts & best guess (DEFAULT)
+    --gem-all[=gem1,..]      Include all scripts & files
+    --gem-full[=gem1,..]     Include EVERYTHING
+    --gem-spec[=gem1,..]     Include files in gemspec (Does not work with Rubygems 1.7+)
 
-  minimal: loaded scripts
-  guess: loaded scripts and other files
-  all: loaded scripts, other scripts, other files (except extras)
-  full: Everything found in the gem directory
+  minimal: loaded scripts  
+  guess: loaded scripts and other files  
+  all: loaded scripts, other scripts, other files (except extras)  
+  full: Everything found in the gem directory  
 
---[no-]gem-scripts[=..]  Other script files than those loaded
---[no-]gem-files[=..]    Other files (e.g. data files)
---[no-]gem-extras[=..]   Extra files (README, etc.)
+    --[no-]gem-scripts[=..]  Other script files than those loaded
+    --[no-]gem-files[=..]    Other files (e.g. data files)
+    --[no-]gem-extras[=..]   Extra files (README, etc.)
 
-  scripts: .rb/.rbw files
-  extras: C/C++ sources, object files, test, spec, README
-  files: all other files
+  scripts: .rb/.rbw files  
+  extras: C/C++ sources, object files, test, spec, README  
+  files: all other files  
 
 Auto-detection options:
 
---no-dep-run       Don't run script.rb to check for dependencies.
---no-autoload      Don't load/include script.rb's autoloads.
---no-autodll       Disable detection of runtime DLL dependencies.
+    --no-dep-run       Don't run script.rb to check for dependencies.
+   --no-autoload      Don't load/include script.rb's autoloads.
+    --no-autodll       Disable detection of runtime DLL dependencies.
 
 Output options:
 
---output <file>    Name the exe to generate. Defaults to ./<scriptname>.exe.
---no-lzma          Disable LZMA compression of the executable.
---innosetup <file> Use given Inno Setup script (.iss) to create an installer.
+    --output <file>    Name the exe to generate. Defaults to ./<scriptname>.exe.
+    --no-lzma          Disable LZMA compression of the executable.
+    --innosetup <file> Use given Inno Setup script (.iss) to create an installer.
 
 Executable options:
 
---windows          Force Windows application (rubyw.exe)
---console          Force console application (ruby.exe)
---chdir-first      When exe starts, change working directory to app dir.
---icon <ico>       Replace icon with a custom one.
---debug            Executable will be verbose.
---debug-extract    Executable will unpack to local dir and not delete after.
+    --windows          Force Windows application (rubyw.exe)  
+    --console          Force console application (ruby.exe)  
+    --chdir-first      When exe starts, change working directory to app dir.  
+    --icon <ico>       Replace icon with a custom one.  
+    --debug            Executable will be verbose.  
+    --debug-extract    Executable will unpack to local dir and not delete after.  
 
   
 === Compilation:
@@ -157,20 +169,6 @@ Executable options:
   1.8.7p374, 1.9.3p545, and 2.0.0p481 (32 and 64 bit).
 
 * MinGW Installation (when working with the source code only)
-
-== INSTALL:
-
-=== Gem Package
-
-Install by running:
-
-  gem install ocra
-
-=== Alternate Gem download:
-
-* http://rubyforge.org/frs/?group_id=8185
-
-* http://rubygems.org/gems/ocra
 
 === Stand-alone version
 

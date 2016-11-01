@@ -15,6 +15,9 @@ module Ocra
     end
 
     attr_reader :path
+    if File::ALT_SEPARATOR.nil?
+      File::ALT_SEPARATOR = "\\"
+    end
     SEPARATOR_PAT = /[#{Regexp.quote File::ALT_SEPARATOR}#{Regexp.quote File::SEPARATOR}]/ # }
     ABSOLUTE_PAT = /\A([A-Z]:)?#{SEPARATOR_PAT}/i
 
@@ -175,9 +178,9 @@ module Ocra
     a.sort.inject([]) { |r, e| r.last == e ? r : r << e }
   end
 
-  VERSION = "1.3.1"
+  VERSION = "1.3.6"
 
-  IGNORE_MODULES = /^enumerator.so$/
+  IGNORE_MODULES = /\/(enumerator.so|rational.so|complex.so|thread.rb)$/
 
   GEM_SCRIPT_RE = /\.rbw?$/
   GEM_EXTRA_RE = %r{(
@@ -468,8 +471,8 @@ EOF
         mod.constants.each do |const|
           # Module::Config causes warning on Ruby 1.9.3 - prevent autoloading
           next if Module === mod && const == :Config
-
           if mod.autoload?(const)
+            Ocra.msg "Attempting to trigger autoload of #{mod}::#{const}"
             begin
               mod.const_get(const)
             rescue NameError
@@ -608,6 +611,7 @@ EOF
       end
 
       gem_files = []
+
       gems.each do |gemname, spec|
         @gemspecs << Pathname(spec.spec_file) if File.exist?(spec.spec_file)
 
@@ -651,8 +655,19 @@ EOF
         Ocra.msg "Detected gem #{spec.full_name} (#{include.join(', ')})"
 
         gem_root = Pathname(spec.gem_dir)
+        gem_extension = (gem_root / '..' / '..' / 'extensions').expand
+        if gem_extension.exist?
+          build_complete = gem_extension.find_all_files(/gem.build_complete/).select{|p| p.dirname.basename.to_s == spec.full_name}
+        else
+          build_complete = nil
+        end
         gem_root_files = nil
         files = []
+
+        unless gem_root.directory?
+          Ocra.warn "Gem #{spec.full_name} root folder was not found, skipping"
+          next
+        end
 
         # Find the selected files
         include.each do |set|
@@ -664,7 +679,8 @@ EOF
           when :files
             gem_root_files ||= gem_root.find_all_files(//)
             files << gem_root_files.select { |path| path.relative_path_from(gem_root) !~ GEM_NON_FILE_RE }
-          when :extra
+            files << build_complete if build_complete
+          when :extras
             gem_root_files ||= gem_root.find_all_files(//)
             files << gem_root_files.select { |path| path.relative_path_from(gem_root) =~ GEM_EXTRA_RE }
           when :scripts
@@ -700,7 +716,7 @@ EOF
 
     restore_environment
 
-    # If the script was ran, then detect the features it used
+    # If the script was run, then detect the features it used
     if Ocra.run_script
       # Attempt to autoload libraries before doing anything else.
       attempt_load_autoload if Ocra.load_autoload
@@ -709,7 +725,6 @@ EOF
     # Store the currently loaded files (before we require rbconfig for
     # our own use).
     features = $LOADED_FEATURES.map { |feature| Pathname(feature) }
-    features.delete_if { |feature| feature =~ IGNORE_MODULES }
 
     # Find gemspecs to include
     if defined?(Gem)
@@ -807,7 +822,7 @@ EOF
       if gemfile.subpath?(Host.exec_prefix)
         libs << [ gemfile, gemfile.relative_path_from(Host.exec_prefix) ]
       elsif defined?(Gem) and gemhome = Gem.path.find { |pth| gemfile.subpath?(pth) }
-        targetpath = GEMHOMEDIR / fullpath.relative_path_from(gemhome)
+        targetpath = GEMHOMEDIR / gemfile.relative_path_from(Pathname(gemhome))
         libs << [ gemfile, targetpath ]
       else
         Ocra.fatal_error "Don't know where to put gemfile #{gemfile}"
@@ -864,7 +879,11 @@ EOF
         if file.directory?
           sb.ensuremkdir(target)
         else
-          sb.createfile(file, target)
+          begin
+            sb.createfile(file, target)
+          rescue Errno::ENOENT
+            raise unless file =~ IGNORE_MODULES
+          end
         end
       end
 
@@ -903,7 +922,7 @@ EOF
         if gemspec.subpath?(Host.exec_prefix)
           path = gemspec.relative_path_from(Host.exec_prefix)
           sb.createfile(gemspec, path)
-        elsif defined?(Gem) and gemhome = Gem.path.find { |pth| gemspec.subpath?(pth) }
+        elsif defined?(Gem) and gemhome = Pathname(Gem.path.find { |pth| gemspec.subpath?(pth) })
           path = GEMHOMEDIR / gemspec.relative_path_from(gemhome)
           sb.createfile(gemspec, path)
         else
@@ -939,9 +958,9 @@ EOF
     def LibraryDetector.loaded_dlls
       require 'Win32API'
 
-      enumprocessmodules = Win32API.new('psapi', 'EnumProcessModules', ['L','P','L','P'], 'B')
+      enumprocessmodules = Win32API.new('psapi', 'EnumProcessModules', ['L','P','L','P'], 'L')
       getmodulefilename = Win32API.new('kernel32', 'GetModuleFileName', ['L','P','L'], 'L')
-      getcurrentprocess = Win32API.new('kernel32', 'GetCurrentProcess', ['V'], 'L')
+      getcurrentprocess = Win32API.new('kernel32', 'GetCurrentProcess', [], 'L')
 
       bytes_needed = 4 * 32
       module_handle_buffer = nil
@@ -1057,7 +1076,7 @@ EOF
           @files.each do |tgt, src|
             src_escaped = src.to_s.gsub('"', '""')
             target_dir_escaped = Pathname.new(tgt).dirname.to_s.gsub('"', '""')
-            iss << "Source: \"#{src_escaped}\"; DestDir: \"{app}/#{target_dir_escaped}\"\n"
+            iss << "Source: \"#{src_escaped}\"; DestDir: \"{app}/#{target_dir_escaped}\"\n" unless src_escaped =~ IGNORE_MODULES
           end
           iss << "\n"
 
